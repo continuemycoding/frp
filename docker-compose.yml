@@ -1,0 +1,26 @@
+version: '3'
+services:
+  frps:
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile-for-frps
+    image: ccr.ccs.tencentyun.com/664301573/frps:latest
+    restart: always
+    environment:
+      TZ: "Asia/Shanghai"
+    ports:
+      - "9999:9999"
+      - "10100-10200:10100-10200"
+    volumes:
+      - ./frps.ini:/usr/bin/frps.ini
+
+  frpc:
+    build:
+      context: .
+      dockerfile: dockerfiles/Dockerfile-for-frpc
+    image: ccr.ccs.tencentyun.com/664301573/frpc:latest
+    restart: always
+    environment:
+      TZ: "Asia/Shanghai"
+    volumes:
+      - ./frpc.ini:/usr/bin/frpc.ini
