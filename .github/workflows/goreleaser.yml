@@ -3,9 +3,12 @@ name: goreleaser
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   goreleaser:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -33,6 +36,6 @@ jobs:
         uses: goreleaser/goreleaser-action@v7
         with:
           version: latest
-          args: release --clean --release-notes=./Release.md
+          args: release --clean --skip=validate --release-notes=./Release.md
         env:
-          GITHUB_TOKEN: ${{ secrets.GPR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

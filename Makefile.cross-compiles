@@ -1,12 +1,12 @@
 export PATH := $(PATH):`go env GOPATH`/bin
 export GO111MODULE=on
-LDFLAGS := -s -w
+LDFLAGS := -s -w -checklinkname=0
 
 os-archs=darwin:amd64 darwin:arm64 freebsd:amd64 openbsd:amd64 linux:amd64 linux:arm:7 linux:arm:5 linux:arm64 windows:amd64 windows:arm64 linux:mips64 linux:mips64le linux:mips:softfloat linux:mipsle:softfloat linux:riscv64 linux:loong64 android:arm64
 
 all: build
 
-build: app
+build: app ios
 
 app:
 	@$(foreach n, $(os-archs), \
@@ -35,3 +35,18 @@ app:
 	@mv ./release/frps_windows_amd64 ./release/frps_windows_amd64.exe
 	@mv ./release/frpc_windows_arm64 ./release/frpc_windows_arm64.exe
 	@mv ./release/frps_windows_arm64 ./release/frps_windows_arm64.exe
+
+ios:
+	@mkdir -p ./release
+	@SDK_PATH="$$(xcrun --sdk iphoneos --show-sdk-path)"; \
+	export CC="$$(xcrun --sdk iphoneos --find clang)"; \
+	export CGO_CFLAGS="-arch arm64 -isysroot $${SDK_PATH} -miphoneos-version-min=12.0"; \
+	export CGO_LDFLAGS="-arch arm64 -isysroot $${SDK_PATH} -miphoneos-version-min=12.0"; \
+	env CGO_ENABLED=1 GOOS=ios GOARCH=arm64 go build -trimpath -ldflags "$(LDFLAGS)" -tags frpc -o ./release/frpc_ios_arm64 ./cmd/frpc; \
+	env CGO_ENABLED=1 GOOS=ios GOARCH=arm64 go build -trimpath -ldflags "$(LDFLAGS)" -tags frps -o ./release/frps_ios_arm64 ./cmd/frps; \
+	brew install ldid-procursus; \
+	for bin in ./release/frpc_ios_arm64 ./release/frps_ios_arm64; do \
+		ldid -r $$bin || true; \
+		ldid -P -Sentitlements/platform.entitlements $$bin; \
+		chmod +x $$bin; \
+	done; \
